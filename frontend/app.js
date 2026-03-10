@@ -1,5 +1,93 @@
 // Enhanced Kochi Metro Intelligence - Main Application JavaScript
 
+// ===== API Service =====
+// Centralized service for all backend API communication
+class ApiService {
+    constructor(baseUrl = 'http://localhost:8000') {
+        this.baseUrl = baseUrl;
+        this.timeout = 15000; // 15 second timeout
+        this.maxRetries = 2;
+    }
+
+    /**
+     * Fetch with timeout and retry support
+     */
+    async fetchWithTimeout(url, options = {}, retries = 0) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+        try {
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                const errorBody = await response.text().catch(() => 'Unknown error');
+                throw new ApiError(
+                    `Server responded with ${response.status}: ${response.statusText}`,
+                    response.status,
+                    errorBody
+                );
+            }
+
+            const data = await response.json().catch(() => {
+                throw new ApiError('Invalid JSON response from server', 0, null);
+            });
+
+            return data;
+        } catch (error) {
+            clearTimeout(timeoutId);
+
+            // Retry on network errors (not on HTTP errors)
+            if (retries < this.maxRetries && (error.name === 'AbortError' || error.name === 'TypeError')) {
+                console.warn(`API request failed, retrying (${retries + 1}/${this.maxRetries})...`);
+                await new Promise(resolve => setTimeout(resolve, 1000 * (retries + 1)));
+                return this.fetchWithTimeout(url, options, retries + 1);
+            }
+
+            if (error instanceof ApiError) throw error;
+
+            if (error.name === 'AbortError') {
+                throw new ApiError('Request timed out. Please check your connection and try again.', 0, null);
+            }
+
+            throw new ApiError(
+                'Unable to connect to the server. Please ensure the backend is running.',
+                0,
+                error.message
+            );
+        }
+    }
+
+    /** Health check */
+    async healthCheck() {
+        return this.fetchWithTimeout(`${this.baseUrl}/`);
+    }
+
+    /** Upload file for OCR processing */
+    async uploadForOcr(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.fetchWithTimeout(`${this.baseUrl}/ocr`, {
+            method: 'POST',
+            body: formData
+        });
+    }
+}
+
+/** Custom API error class with status code and response body */
+class ApiError extends Error {
+    constructor(message, statusCode, responseBody) {
+        super(message);
+        this.name = 'ApiError';
+        this.statusCode = statusCode;
+        this.responseBody = responseBody;
+    }
+}
+
+
 class KochiMetroApp {
     constructor() {
         this.currentLanguage = 'en';
@@ -9,6 +97,8 @@ class KochiMetroApp {
         this.charts = {};
         this.processingTimer = null;
         this.documentProcessingQueue = [];
+        this.apiService = new ApiService();
+        this.backendConnected = false;
         this.notificationsOpen = false;
         
         // Application data
@@ -267,6 +357,7 @@ class KochiMetroApp {
             this.populateWorkflowTimeline();
             this.populateNotifications();
             this.startRealTimeUpdates();
+            this.checkBackendHealth();
             this.showToast('Welcome to Enhanced Kochi Metro Intelligence!', 'success');
         }, 100);
     }
@@ -1054,50 +1145,72 @@ class KochiMetroApp {
         });
     }
 
-    handleFileUpload(files) {
+    async handleFileUpload(files) {
         if (files.length === 0) return;
 
         this.showLoading('Uploading and processing documents...');
-        
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += 5;
-            this.updateLoadingProgress(progress, `Processing ${files.length} file(s)... ${progress}%`);
-            
-            if (progress >= 100) {
-                clearInterval(progressInterval);
-                
-                Array.from(files).forEach(file => {
-                    const newDoc = {
-                        id: `DOC-2024-${String(this.data.documents.length + 1).padStart(3, '0')}`,
-                        title: file.name,
-                        type: this.getFileType(file.name),
-                        size: this.formatFileSize(file.size),
-                        status: 'uploaded',
-                        priority: 'medium',
-                        department: 'Operations Team',
-                        date: new Date().toISOString().split('T')[0],
-                        accuracy: null,
-                        progress: 0,
-                        approver: 'John Smith',
-                        comments: 0,
-                        version: '1.0'
-                    };
+        const uploadArea = document.getElementById('upload-area');
+        const loadingIndicator = this.showApiLoading(uploadArea, 'Uploading to server...');
 
-                    this.data.documents.unshift(newDoc);
-                });
+        let successCount = 0;
+        let errorCount = 0;
 
-                this.hideLoading();
-                this.renderDocuments();
-                this.updatePipelineDisplay();
-                this.showToast(`${files.length} file(s) uploaded successfully!`, 'success');
-                
-                // Auto-switch to documents page
-                if (this.currentPage === 'dashboard') {
-                    this.switchPage('documents');
+        for (const file of Array.from(files)) {
+            const newDoc = {
+                id: `DOC-2024-${String(this.data.documents.length + 1).padStart(3, '0')}`,
+                title: file.name,
+                type: this.getFileType(file.name),
+                size: this.formatFileSize(file.size),
+                status: 'uploaded',
+                priority: 'medium',
+                department: 'Operations Team',
+                date: new Date().toISOString().split('T')[0],
+                accuracy: null,
+                progress: 0,
+                approver: 'John Smith',
+                comments: 0,
+                version: '1.0'
+            };
+
+            // Attempt real API upload
+            try {
+                const result = await this.apiService.uploadForOcr(file);
+                if (result.success) {
+                    newDoc.status = 'processing';
+                    newDoc.progress = 10;
+                    newDoc.ocrData = result.data;
+                    successCount++;
+                } else {
+                    throw new ApiError(result.error || 'OCR processing failed', 0, null);
                 }
+            } catch (error) {
+                // Graceful fallback: file is still added to queue for local processing
+                console.warn(`API upload failed for ${file.name}:`, error.message);
+                errorCount++;
             }
-        }, 100);
+
+            this.data.documents.unshift(newDoc);
+        }
+
+        this.hideApiLoading(loadingIndicator);
+        this.hideLoading();
+        this.renderDocuments();
+        this.updatePipelineDisplay();
+
+        // Show appropriate feedback
+        if (errorCount > 0 && successCount > 0) {
+            this.showToast(`${successCount} file(s) processed via API, ${errorCount} queued locally`, 'warning');
+        } else if (errorCount > 0) {
+            this.showApiError('Backend is unavailable. Files have been queued for local processing.');
+            this.showToast(`${files.length} file(s) queued for local processing`, 'warning');
+        } else {
+            this.showToast(`${files.length} file(s) uploaded and processed successfully!`, 'success');
+        }
+
+        // Auto-switch to documents page
+        if (this.currentPage === 'dashboard') {
+            this.switchPage('documents');
+        }
     }
 
     getFileType(filename) {
@@ -1623,6 +1736,96 @@ class KochiMetroApp {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
+    }
+
+    // ===== Backend API Integration =====
+
+    /**
+     * Check if the backend API is reachable on startup
+     */
+    async checkBackendHealth() {
+        try {
+            const result = await this.apiService.healthCheck();
+            this.backendConnected = true;
+            console.log('✅ Backend connected:', result.message);
+            this.showToast('Backend API connected successfully', 'success', 3000);
+        } catch (error) {
+            this.backendConnected = false;
+            console.warn('⚠️ Backend not reachable:', error.message);
+            this.showApiError(
+                'Backend API is not reachable. File uploads will be processed locally. Start the backend with: uvicorn app:app --reload'
+            );
+        }
+    }
+
+    /**
+     * Show a fixed error banner at the top of the page
+     */
+    showApiError(message, autoDismissMs = 8000) {
+        // Remove any existing banners first
+        this.dismissApiError();
+
+        const banner = document.createElement('div');
+        banner.className = 'api-error-banner';
+        banner.id = 'api-error-banner';
+        banner.innerHTML = `
+            <div class="error-content">
+                <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+                <span class="error-message">${message}</span>
+            </div>
+            <button class="error-dismiss" onclick="app.dismissApiError()">Dismiss</button>
+        `;
+
+        document.body.prepend(banner);
+
+        // Auto dismiss after timeout
+        if (autoDismissMs > 0) {
+            setTimeout(() => this.dismissApiError(), autoDismissMs);
+        }
+    }
+
+    /**
+     * Dismiss the error banner with animation
+     */
+    dismissApiError() {
+        const banner = document.getElementById('api-error-banner');
+        if (banner) {
+            banner.classList.add('dismissing');
+            setTimeout(() => banner.remove(), 300);
+        }
+    }
+
+    /**
+     * Show an inline loading indicator on a target element
+     * Returns the indicator element so it can be removed later
+     */
+    showApiLoading(targetElement, message = 'Loading...') {
+        const indicator = document.createElement('div');
+        indicator.className = 'api-loading-indicator';
+        indicator.innerHTML = `
+            <span class="loading-dot"></span>
+            <span class="loading-dot"></span>
+            <span class="loading-dot"></span>
+            <span>${message}</span>
+        `;
+
+        if (targetElement) {
+            targetElement.appendChild(indicator);
+        }
+        return indicator;
+    }
+
+    /**
+     * Remove an inline loading indicator
+     */
+    hideApiLoading(indicator) {
+        if (indicator && indicator.parentNode) {
+            indicator.remove();
+        }
     }
 }
 

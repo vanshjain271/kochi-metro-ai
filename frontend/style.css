@@ -1223,8 +1223,7 @@ select.form-control {
 
 .upload-area.dragover {
   border-color: var(--color-primary);
-  background: var(--color-primary);
-  background-opacity: 0.1;
+  background: rgba(var(--color-teal-500-rgb), 0.08);
 }
 
 .upload-content {
@@ -2301,4 +2300,246 @@ select.form-control {
 @keyframes loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* ===== Header Enhancement ===== */
+.header {
+  border-bottom: 2px solid transparent;
+  background-image: linear-gradient(var(--color-surface), var(--color-surface)),
+                    linear-gradient(90deg, var(--color-primary), var(--color-teal-400), var(--color-primary));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/* ===== Smooth Scroll ===== */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ===== Site Footer ===== */
+.site-footer {
+  background: var(--color-surface);
+  border-top: 3px solid transparent;
+  background-image: linear-gradient(var(--color-surface), var(--color-surface)),
+                    linear-gradient(90deg, var(--color-primary), var(--color-teal-400), var(--color-primary));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  padding: var(--space-32) 0 var(--space-16);
+  margin-top: var(--space-32);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: var(--space-32);
+  margin-bottom: var(--space-32);
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin-bottom: var(--space-12);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+}
+
+.footer-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.footer-section h4 {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text);
+  margin-bottom: var(--space-12);
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.footer-links a {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  transition: color var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) var(--ease-standard);
+  display: inline-block;
+}
+
+.footer-links a:hover {
+  color: var(--color-primary);
+  transform: translateX(4px);
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-card-border);
+}
+
+.footer-bottom p {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.footer-version {
+  font-size: var(--font-size-xs) !important;
+  opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-24);
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-20);
+  }
+}
+
+/* ===== API Error Banner ===== */
+.api-error-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3000;
+  background: linear-gradient(135deg, var(--color-error), #d32f2f);
+  color: white;
+  padding: var(--space-12) var(--space-24);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  animation: bannerSlideDown 0.4s var(--ease-standard);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.api-error-banner .error-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  flex: 1;
+}
+
+.api-error-banner .error-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.api-error-banner .error-message {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.api-error-banner .error-dismiss {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.api-error-banner .error-dismiss:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.api-error-banner.dismissing {
+  animation: bannerSlideUp 0.3s var(--ease-standard) forwards;
+}
+
+@keyframes bannerSlideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes bannerSlideUp {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(-100%); opacity: 0; }
+}
+
+/* ===== Inline API Loading Indicator ===== */
+.api-loading-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-16);
+  background: var(--color-bg-8);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary);
+  animation: fadeIn 0.3s var(--ease-standard);
+}
+
+.api-loading-indicator .loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  animation: apiPulse 1s infinite ease-in-out;
+}
+
+.api-loading-indicator .loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.api-loading-indicator .loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes apiPulse {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* ===== Connection Status Indicator ===== */
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-full);
+  background: var(--color-secondary);
+}
+
+.connection-status .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: background var(--duration-normal) var(--ease-standard);
+}
+
+.connection-status.connected .status-dot {
+  background: var(--color-success);
+}
+
+.connection-status.disconnected .status-dot {
+  background: var(--color-error);
+  animation: apiPulse 1.5s infinite ease-in-out;
 }

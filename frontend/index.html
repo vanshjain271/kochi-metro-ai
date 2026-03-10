@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-powered document management system for Kochi Metro Rail Limited. Features OCR processing, intelligent classification, automated summarization, and real-time analytics.">
+    <meta name="keywords" content="Kochi Metro, KMRL, AI, Document Management, OCR, FastAPI">
+    <meta name="author" content="Kochi Metro Intelligence Team">
     <title>Kochi Metro Intelligence - AI-Powered Document Management</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,6 +14,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- No-JavaScript Fallback -->
+    <noscript>
+        <div style="background:#B4413C;color:#fff;text-align:center;padding:16px;font-family:sans-serif;">
+            This application requires JavaScript to run. Please enable JavaScript in your browser settings.
+        </div>
+    </noscript>
+
+    <!-- Skip to main content link for accessibility -->
+    <a href="#dashboard" class="sr-only" style="position:absolute;top:-40px;left:0;background:#21808D;color:#fff;padding:8px 16px;z-index:1000;" onfocus="this.style.top='0'" onblur="this.style.top='-40px'">Skip to main content</a>
+
     <!-- Header Navigation -->
     <header class="header">
         <div class="container">
@@ -28,13 +41,13 @@
                         <p data-translate="subtitle">AI-Powered Document Management System</p>
                     </div>
                 </div>
-                <nav class="main-nav">
-                    <button class="nav-btn active" data-page="dashboard" data-translate="dashboard">Dashboard</button>
-                    <button class="nav-btn" data-page="documents" data-translate="documents">Documents</button>
-                    <button class="nav-btn" data-page="analytics" data-translate="analytics">Analytics</button>
-                    <button class="nav-btn" data-page="workflow" data-translate="workflow">Workflow</button>
-                    <button class="nav-btn" data-page="reports" data-translate="reports">Reports</button>
-                    <button class="nav-btn" data-page="settings" data-translate="settings">Settings</button>
+                <nav class="main-nav" aria-label="Main navigation">
+                    <button class="nav-btn active" data-page="dashboard" data-translate="dashboard" aria-label="Go to Dashboard">Dashboard</button>
+                    <button class="nav-btn" data-page="documents" data-translate="documents" aria-label="Go to Documents">Documents</button>
+                    <button class="nav-btn" data-page="analytics" data-translate="analytics" aria-label="Go to Analytics">Analytics</button>
+                    <button class="nav-btn" data-page="workflow" data-translate="workflow" aria-label="Go to Workflow">Workflow</button>
+                    <button class="nav-btn" data-page="reports" data-translate="reports" aria-label="Go to Reports">Reports</button>
+                    <button class="nav-btn" data-page="settings" data-translate="settings" aria-label="Go to Settings">Settings</button>
                 </nav>
                 <div class="header-controls">
                     <button class="notification-btn" id="notification-btn">
@@ -819,6 +832,54 @@
             </div>
         </div>
     </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
+                            <rect width="40" height="40" rx="8" fill="var(--color-primary)"/>
+                            <path d="M12 20L18 14L28 24" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M12 26L18 20L28 30" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <span>Kochi Metro Intelligence</span>
+                    </div>
+                    <p class="footer-description">AI-powered document management system for Kochi Metro Rail Limited. Streamlining operations with intelligent OCR, classification, and analytics.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="#" data-page="dashboard">Dashboard</a></li>
+                        <li><a href="#" data-page="documents">Documents</a></li>
+                        <li><a href="#" data-page="analytics">Analytics</a></li>
+                        <li><a href="#" data-page="reports">Reports</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Technology</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://fastapi.tiangolo.com" target="_blank" rel="noopener noreferrer">FastAPI</a></li>
+                        <li><a href="https://github.com/tesseract-ocr/tesseract" target="_blank" rel="noopener noreferrer">Tesseract OCR</a></li>
+                        <li><a href="https://www.chartjs.org" target="_blank" rel="noopener noreferrer">Chart.js</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Project</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://github.com/vanshjain271/kochi-metro-ai" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+                        <li><a href="https://github.com/vanshjain271/kochi-metro-ai/issues" target="_blank" rel="noopener noreferrer">Report an Issue</a></li>
+                        <li><a href="https://github.com/vanshjain271/kochi-metro-ai#contributing" target="_blank" rel="noopener noreferrer">Contributing Guide</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Kochi Metro Intelligence. Built with ❤️ for KMRL operations.</p>
+                <p class="footer-version">v2.0.0 &bull; AI-Powered Document Management</p>
+            </div>
+        </div>
+    </footer>
 
     <!-- Enhanced AI Assistant -->
     <div class="ai-assistant" id="ai-assistant">
